@@ -26,7 +26,6 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAe75TIxaH5ZJNJMi5UhDO16RnPoW4EeY4",
@@ -39,41 +38,39 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const auth = getAuth(app);
 
   const logoutBtn = document.getElementById("logout");
   const submitBtn = document.getElementById("submit-post");
   const textarea = document.getElementById("post-content");
 
   logoutBtn.onclick = () => {
-    signOut(auth);
-    window.location.href = "signin.html";
+    localStorage.removeItem("loggedInUserUid");
+    window.location.href = "sign-in.html";
   };
 
   // Curse words list - add your own
   const badWords = ["badword1", "badword2", "curse"];
 
-  let currentUser;
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = "signin.html";
-      return;
-    }
-    currentUser = user;
-  });
+  const loggedInUserUid = localStorage.getItem("loggedInUserUid");
+  if (!loggedInUserUid) {
+    alert("You must be signed in to create a post.");
+    window.location.href = "sign-in.html";
+  }
 
   submitBtn.onclick = async () => {
-    if (!currentUser) return alert("Not authenticated.");
+    if (!loggedInUserUid) return alert("Not authenticated.");
 
     const postContent = textarea.value.trim();
     if (!postContent) return alert("Post cannot be empty.");
 
-    const userDocRef = doc(db, "users", currentUser.uid);
+    const userDocRef = doc(db, "users", loggedInUserUid);
     const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists()) return alert("User data not found.");
 
-    const { time = 0, likes = 0 } = userDoc.data();
+    // Firestore fields are strings for time & likes, convert to numbers
+    const userData = userDoc.data();
+    const time = Number(userData.time) || 0;
+    const likes = Number(userData.likes) || 0;
 
     // Posting restrictions
     if (time < 10 || likes < 10) {
@@ -93,7 +90,7 @@
 
     try {
       await addDoc(collection(db, "posts"), {
-        uid: currentUser.uid,
+        uid: loggedInUserUid,
         content: censoredContent,
         createdAt: serverTimestamp(),
         isReply: false
