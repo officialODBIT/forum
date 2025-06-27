@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -47,10 +47,7 @@
     localStorage.removeItem("loggedInUserUid");
     window.location.href = "sign-in.html";
   };
-
-  // Curse words list - add your own
-  const badWords = ["badword1", "badword2", "curse"];
-
+  const badWords = ["fuck", "shit", "bitch", "ass", "sex", "69", "sexual", ""];
   const loggedInUserUid = localStorage.getItem("loggedInUserUid");
   if (!loggedInUserUid) {
     alert("You must be signed in to create a post.");
@@ -66,18 +63,12 @@
     const userDocRef = doc(db, "users", loggedInUserUid);
     const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists()) return alert("User data not found.");
-
-    // Firestore fields are strings for time & likes, convert to numbers
     const userData = userDoc.data();
     const time = Number(userData.time) || 0;
     const likes = Number(userData.likes) || 0;
-
-    // Posting restrictions
     if (time < 10 || likes < 10) {
       return alert("You must have at least 10 minutes on site and 10 profile likes to post.");
     }
-
-    // Censorship tier check
     let censoredContent = postContent;
     const needsCensorship = (time < 25 || likes < 25);
     if (needsCensorship) {
@@ -87,7 +78,6 @@
         censoredContent = "Post is censored due to 1st teir requirements and attempting to post a inappropriate word.";
       }
     }
-
     try {
       await addDoc(collection(db, "posts"), {
         uid: loggedInUserUid,
@@ -103,6 +93,5 @@
     }
   };
 </script>
-
 </body>
 </html>
