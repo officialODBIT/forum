@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign Up - ODBIT Forum</title>
+<style>
+  body { background: #0a0e24; color: white; font-family: Arial, sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
+  form { background: #16203b; padding: 20px; border-radius: 8px; width: 300px; }
+  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; background: #243055; color: white; }
+  button { width: 100%; padding: 10px; background: #1a4db7; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<form id="signup-form">
+  <h2>Create an Account</h2>
+  <input type="text" id="username" placeholder="Username" required minlength="3" />
+  <input type="email" id="email" placeholder="Email" required />
+  <input type="password" id="password" placeholder="Password" required minlength="6" />
+  <button type="submit">Sign Up</button>
+</form>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAe75TIxaH5ZJNJMi5UhDO16RnPoW4EeY4",
+    authDomain: "odbit-forum.firebaseapp.com",
+    projectId: "odbit-forum",
+    storageBucket: "odbit-forum.firebasestorage.app",
+    messagingSenderId: "473744036472",
+    appId: "1:473744036472:web:b910368374b5d120e0538d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const form = document.getElementById("signup-form");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const username = form.username.value.trim();
+    const email = form.email.value.trim();
+    const password = form.password.value;
+
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", cred.user.uid), {
+        username,
+        time: 0,
+        likes: 0,
+        verified: false,
+      });
+      alert("Account created! Redirecting...");
+      window.location.href = "discover.html";
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  });
+</script>
+
+</body>
+</html>
+
+<!--
+
+Author: CEO of ODBIT & Staff-->
