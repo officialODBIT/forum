@@ -36,7 +36,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // A simple hash function for demo - NOT cryptographically secure
   async function hashPassword(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -55,7 +54,6 @@
     const hashedPassword = await hashPassword(password);
 
     try {
-      // Query users collection where username == input username
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("username", "==", username));
       const querySnapshot = await getDocs(q);
@@ -65,7 +63,6 @@
         return;
       }
 
-      // We expect only one user with that username
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
 
@@ -74,7 +71,6 @@
         return;
       }
 
-      // Save logged-in user UID to localStorage for session (simplified)
       localStorage.setItem("loggedInUserUid", userDoc.id);
 
       alert("Login successful!");
