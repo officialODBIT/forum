@@ -15,14 +15,14 @@
 
 <form id="signin-form">
   <h2>Sign In</h2>
-  <input type="email" id="email" placeholder="Email" required />
+  <input type="text" id="username" placeholder="Username" required />
   <input type="password" id="password" placeholder="Password" required />
   <button type="submit">Sign In</button>
 </form>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAe75TIxaH5ZJNJMi5UhDO16RnPoW4EeY4",
@@ -34,18 +34,52 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // A simple hash function for demo - NOT cryptographically secure
+  async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
   const form = document.getElementById("signin-form");
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = form.email.value.trim();
+    const username = form.username.value.trim();
     const password = form.password.value;
 
+    const hashedPassword = await hashPassword(password);
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Query users collection where username == input username
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("username", "==", username));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        alert("Username not found.");
+        return;
+      }
+
+      // We expect only one user with that username
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      if (userData.passwordHash !== hashedPassword) {
+        alert("Incorrect password.");
+        return;
+      }
+
+      // Save logged-in user UID to localStorage for session (simplified)
+      localStorage.setItem("loggedInUserUid", userDoc.id);
+
+      alert("Login successful!");
       window.location.href = "discover.html";
+
     } catch (err) {
       alert("Error: " + err.message);
     }
