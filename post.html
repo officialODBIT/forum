@@ -47,7 +47,7 @@
     localStorage.removeItem("loggedInUserUid");
     window.location.href = "sign-in.html";
   };
-  const badWords = ["fuck", "shit", "bitch", "ass", "sex", "69", "sexual", ""];
+  const badWords = ["fuck", "shit", "bitch", "ass", "sex", "69", "sexual"];
   const loggedInUserUid = localStorage.getItem("loggedInUserUid");
   if (!loggedInUserUid) {
     alert("You must be signed in to create a post.");
