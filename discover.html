@@ -1,4 +1,25 @@
-<!-- near top of body script section -->
+<html lang="en">
+<head>
+<script>console.log("test")</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Discover - ODBIT Forum</title>
+<style>
+  body { background: #0a0e24; color: white; font-family: Arial, sans-serif; padding: 20px; }
+  .post { background: #16203b; padding: 15px; margin-bottom: 12px; border-radius: 8px; }
+  .username { font-weight: bold; }
+  .username.odbit { color: #ffd700; } /* Gold color for ODBIT user */
+  .checkmark { color: #1da1f2; margin-left: 6px; font-weight: bold; }
+  #logout { margin-bottom: 20px; cursor: pointer; color: #1a4db7; }
+  a { color: #1a4db7; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div>
+  <span id="logout">Logout</span> | <a href="post.html">Create Post</a>
+</div>
+<div id="posts-container">Loading posts...</div>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, collection, query, orderBy, getDocs, doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -148,7 +169,8 @@
     }
   }
 </script>
-
+</body>
+</html>
 <!--<!doctype html>
 <html lang="en">
 <head>
