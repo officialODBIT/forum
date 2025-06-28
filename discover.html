@@ -136,7 +136,6 @@
         deleteBtn.textContent = "Delete Post";
         deleteBtn.onclick = async () => {
           await deleteDoc(doc(db, "posts", postId));
-          alert("Post deleted.");
           postDiv.remove();
         };
 
@@ -146,7 +145,6 @@
           await updateDoc(doc(db, "users", postData.uid), {
             banned: true
           });
-          alert("User has been banned.");
         };
 
         menu.appendChild(deleteBtn);
