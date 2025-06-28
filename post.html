@@ -75,7 +75,7 @@
       const lower = postContent.toLowerCase();
       const foundBad = badWords.some(word => lower.includes(word));
       if (foundBad) {
-        censoredContent = "Post is censored due to 1st teir requirements and attempting to post a inappropriate word.";
+        censoredContent = "[ *Post is censored due to 1st teir requirements and attempting to post a inappropriate word. ]";
       }
     }
     try {
