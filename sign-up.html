@@ -1,15 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sign Up - ODBIT Forum</title>
-<style>
-  body { background: #0a0e24; color: white; font-family: Arial, sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
-  form { background: #16203b; padding: 20px; border-radius: 8px; width: 300px; }
-  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; background: #243055; color: white; }
-  button { width: 100%; padding: 10px; background: #1a4db7; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up - ODBIT Forum</title>
+  <style>
+    body {
+      background: #0a0e24;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    form {
+      background: #16203b;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: none;
+      background: #243055;
+      color: white;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #1a4db7;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
@@ -17,14 +47,13 @@
   <h2>Create an Account</h2>
   <input type="text" id="username" placeholder="Username" required minlength="3" />
   <input type="email" id="email" placeholder="Email" required />
-  <input type="password" id="password" placeholder="Password" required minlength="6" />
+  <input type="password" id="password" placeholder="Password" required minlength="4" />
   <button type="submit">Sign Up</button>
 </form>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAe75TIxaH5ZJNJMi5UhDO16RnPoW4EeY4",
@@ -37,7 +66,6 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const auth = getAuth(app);
 
   const form = document.getElementById("signup-form");
   form.addEventListener("submit", async (e) => {
@@ -47,15 +75,33 @@
     const email = form.email.value.trim();
     const password = form.password.value;
 
+    if (username.length < 3 || password.length < 4) {
+      alert("Username must be at least 3 characters and password at least 4.");
+      return;
+    }
+
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", cred.user.uid), {
+      // Check if username already exists
+      const q = query(collection(db, "users"), where("username", "==", username));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        alert("Username is already taken.");
+        return;
+      }
+
+      // Add user to Firestore
+      const docRef = await addDoc(collection(db, "users"), {
         username,
-        time: 0,
-        likes: 0,
+        email,
+        password,
+        time: "0",
+        likes: "0",
         verified: false,
+        staff: false
       });
-      alert("Account created! Redirecting...");
+
+      // Save UID to localStorage
+      localStorage.setItem("loggedInUserUid", docRef.id);
       window.location.href = "discover.html";
     } catch (err) {
       alert("Error: " + err.message);
@@ -65,7 +111,3 @@
 
 </body>
 </html>
-
-<!--
-
-Author: CEO of ODBIT & Staff-->
