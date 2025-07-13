@@ -1,6 +1,6 @@
+<!doctype html>
 <html lang="en">
 <head>
-<script>console.log("test")</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Discover - ODBIT Forum</title>
@@ -8,10 +8,11 @@
   body { background: #0a0e24; color: white; font-family: Arial, sans-serif; padding: 20px; }
   .post { background: #16203b; padding: 15px; margin-bottom: 12px; border-radius: 8px; }
   .username { font-weight: bold; }
-  .username.odbit { color: #ffd700; } /* Gold color for ODBIT user */
+  .username.odbit { color: #ffd700; }
   .checkmark { color: #1da1f2; margin-left: 6px; font-weight: bold; }
   #logout { margin-bottom: 20px; cursor: pointer; color: #1a4db7; }
   a { color: #1a4db7; text-decoration: none; }
+  img.post-image { max-width: 100%; border-radius: 8px; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -20,6 +21,7 @@
   <span id="logout">Logout</span> | <a href="post.html">Create Post</a>
 </div>
 <div id="posts-container">Loading posts...</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, collection, query, orderBy, getDocs, doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -28,7 +30,7 @@
     apiKey: "AIzaSyAe75TIxaH5ZJNJMi5UhDO16RnPoW4EeY4",
     authDomain: "odbit-forum.firebaseapp.com",
     projectId: "odbit-forum",
-    storageBucket: "odbit-forum.firebasestorage.app",
+    storageBucket: "odbit-forum.appspot.com",
     messagingSenderId: "473744036472",
     appId: "1:473744036472:web:b910368374b5d120e0538d"
   };
@@ -47,13 +49,8 @@
   function createUsernameElement(username, verified) {
     const span = document.createElement("span");
     span.textContent = username;
-
-    if (username === "ODBIT") {
-      span.classList.add("username", "odbit");
-    } else {
-      span.classList.add("username");
-    }
-
+    span.classList.add("username");
+    if (username === "ODBIT") span.classList.add("odbit");
     if (verified) {
       const check = document.createElement("span");
       check.classList.add("checkmark");
@@ -61,7 +58,6 @@
       check.textContent = "✔";
       span.appendChild(check);
     }
-
     return span;
   }
 
@@ -83,7 +79,6 @@
     }
 
     const currentUserData = currentUserDoc.data();
-
     if (currentUserData.banned === true) {
       localStorage.removeItem("loggedInUserUid");
       window.location.href = "not-approved.html";
@@ -97,7 +92,6 @@
   async function loadPosts(isAdmin) {
     const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
     const postsSnapshot = await getDocs(postsQuery);
-
     postsContainer.textContent = "";
 
     if (postsSnapshot.empty) {
@@ -123,7 +117,13 @@
       contentP.textContent = postData.content;
       postDiv.appendChild(contentP);
 
-      // Admin controls
+      if (postData.imageUrl) {
+        const img = document.createElement("img");
+        img.src = postData.imageUrl;
+        img.classList.add("post-image");
+        postDiv.appendChild(img);
+      }
+
       if (isAdmin) {
         const menuBtn = document.createElement("span");
         menuBtn.classList.add("admin-menu-btn");
@@ -169,116 +169,3 @@
 </script>
 </body>
 </html>
-<!--<!doctype html>
-<html lang="en">
-<head>
-<script>console.log("test")</script>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Discover - ODBIT Forum</title>
-<style>
-  body { background: #0a0e24; color: white; font-family: Arial, sans-serif; padding: 20px; }
-  .post { background: #16203b; padding: 15px; margin-bottom: 12px; border-radius: 8px; }
-  .username { font-weight: bold; }
-  .username.odbit { color: #ffd700; } /* Gold color for ODBIT user */
-  .checkmark { color: #1da1f2; margin-left: 6px; font-weight: bold; }
-  #logout { margin-bottom: 20px; cursor: pointer; color: #1a4db7; }
-  a { color: #1a4db7; text-decoration: none; }
-</style>
-</head>
-<body>
-
-<div>
-  <span id="logout">Logout</span> | <a href="post.html">Create Post</a>
-</div>
-
-<div id="posts-container">Loading posts...</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAe75TIxaH5ZJNJMi5UhDO16RnPoW4EeY4",
-    authDomain: "odbit-forum.firebaseapp.com",
-    projectId: "odbit-forum",
-    storageBucket: "odbit-forum.firebasestorage.app",
-    messagingSenderId: "473744036472",
-    appId: "1:473744036472:web:b910368374b5d120e0538d"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const postsContainer = document.getElementById("posts-container");
-  const logoutBtn = document.getElementById("logout");
-
-  logoutBtn.onclick = () => {
-    localStorage.removeItem("loggedInUserUid");
-    window.location.href = "sign-in.html";
-  };
-
-  function createUsernameElement(username, verified) {
-    const span = document.createElement("span");
-    span.textContent = username;
-
-    if (username === "ODBIT") {
-      span.classList.add("username", "odbit");
-    } else {
-      span.classList.add("username");
-    }
-
-    if (verified) {
-      const check = document.createElement("span");
-      check.classList.add("checkmark");
-      check.title = "Verified User";
-      check.textContent = "✔";
-      span.appendChild(check);
-    }
-
-    return span;
-  }
-
-  const loggedInUserUid = localStorage.getItem("loggedInUserUid");
-
-  if (!loggedInUserUid) {
-    window.location.href = "sign-in.html";
-  } else {
-    loadPosts();
-  }
-
-  async function loadPosts() {
-    const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-    const postsSnapshot = await getDocs(postsQuery);
-
-    if (postsSnapshot.empty) {
-      postsContainer.textContent = "No posts yet.";
-      return;
-    }
-
-    postsContainer.textContent = "";
-
-    for (const postDoc of postsSnapshot.docs) {
-      const postData = postDoc.data();
-
-      const userDoc = await getDoc(doc(db, "users", postData.uid));
-      if (!userDoc.exists()) continue;
-      const { username, verified } = userDoc.data();
-
-      const postDiv = document.createElement("div");
-      postDiv.classList.add("post");
-
-      const userSpan = createUsernameElement(username, verified);
-      postDiv.appendChild(userSpan);
-
-      const contentP = document.createElement("p");
-      contentP.textContent = postData.content;
-      postDiv.appendChild(contentP);
-
-      postsContainer.appendChild(postDiv);
-    }
-  }
-</script>
-
-</body>
-</html>-->
