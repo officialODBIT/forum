@@ -6,7 +6,8 @@
 <title>Create Post - ODBIT Forum</title>
 <style>
   body { background: #0a0e24; color: white; font-family: Arial, sans-serif; padding: 20px; }
-  textarea { width: 100%; height: 150px; background: #16203b; border: none; border-radius: 8px; color: white; padding: 12px; font-size: 16px; }
+  textarea, input[type="file"] { width: 100%; background: #16203b; border: none; border-radius: 8px; color: white; padding: 12px; font-size: 16px; margin-top: 10px; }
+  textarea { height: 150px; }
   button { margin-top: 12px; padding: 10px 20px; background: #1a4db7; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
   #logout { margin-bottom: 20px; cursor: pointer; color: #1a4db7; }
   a { color: #1a4db7; text-decoration: none; }
@@ -20,35 +21,41 @@
 
 <h2>Create a Post</h2>
 <textarea id="post-content" placeholder="Write something..."></textarea>
+<input type="file" id="image-upload" accept="image/*" />
 <br/>
 <button id="submit-post">Submit Post</button>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAe75TIxaH5ZJNJMi5UhDO16RnPoW4EeY4",
     authDomain: "odbit-forum.firebaseapp.com",
     projectId: "odbit-forum",
-    storageBucket: "odbit-forum.firebasestorage.app",
+    storageBucket: "odbit-forum.appspot.com",
     messagingSenderId: "473744036472",
     appId: "1:473744036472:web:b910368374b5d120e0538d"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   const logoutBtn = document.getElementById("logout");
   const submitBtn = document.getElementById("submit-post");
   const textarea = document.getElementById("post-content");
+  const imageInput = document.getElementById("image-upload");
 
   logoutBtn.onclick = () => {
     localStorage.removeItem("loggedInUserUid");
     window.location.href = "sign-in.html";
   };
+
   const badWords = ["fuck", "shit", "bitch", "ass", "sex", "69", "sexual", "nigga", "nigger"];
   const loggedInUserUid = localStorage.getItem("loggedInUserUid");
+
   if (!loggedInUserUid) {
     alert("You must be signed in to create a post.");
     window.location.href = "sign-in.html";
@@ -58,35 +65,48 @@
     if (!loggedInUserUid) return alert("Not authenticated.");
 
     const postContent = textarea.value.trim();
-    if (!postContent) return alert("Post cannot be empty.");
+    if (!postContent && !imageInput.files.length) return alert("Post cannot be empty.");
 
     const userDocRef = doc(db, "users", loggedInUserUid);
     const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists()) return alert("User data not found.");
     const userData = userDoc.data();
+
     const time = Number(userData.time) || 0;
     const likes = Number(userData.likes) || 0;
     if (time < 10 || likes < 10) {
       return alert("You must have at least 10 minutes on site and 10 profile likes to post.");
     }
+
     let censoredContent = postContent;
     const needsCensorship = (time < 25 || likes < 25);
     if (needsCensorship) {
       const lower = postContent.toLowerCase();
       const foundBad = badWords.some(word => lower.includes(word));
       if (foundBad) {
-        censoredContent = "[ *Post is censored due to 1st teir requirements and attempting to post a inappropriate word. ]";
+        censoredContent = "[ *Post is censored due to 1st tier requirements and attempting to post a inappropriate word. ]";
       }
     }
+
+    let imageUrl = null;
+    if (imageInput.files.length > 0) {
+      const imageFile = imageInput.files[0];
+      const storageRef = ref(storage, `postImages/${Date.now()}_${imageFile.name}`);
+      const snapshot = await uploadBytes(storageRef, imageFile);
+      imageUrl = await getDownloadURL(snapshot.ref);
+    }
+
     try {
       await addDoc(collection(db, "posts"), {
         uid: loggedInUserUid,
         content: censoredContent,
+        imageUrl: imageUrl || null,
         createdAt: serverTimestamp(),
         isReply: false
       });
       alert("Post submitted!");
       textarea.value = "";
+      imageInput.value = "";
       window.location.href = "discover.html";
     } catch (err) {
       alert("Error submitting post: " + err.message);
